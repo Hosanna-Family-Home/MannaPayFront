@@ -3,6 +3,7 @@
 1.
 #typescriptの場合
 npx create-react-app react-app --template typescript
+
 #jsvascriptの場合
 npx create-react-app react-app
 

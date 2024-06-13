@@ -1,14 +1,22 @@
 import { atom } from 'recoil'
 
 export type user = {
-  userId: string
-  userPw: string
+  userId: string | null;
+  userPw: string | null;
+  userPoint: number | null;
+  userName: string | null;
+  userFlag: string | null;
+  loginFlag: boolean;
 }
 
 export const userState = atom<user>({
   key: 'userState',
   default: {
-    userId: '',
-    userPw: ''
+    userId: null,
+    userPw: null,
+    userPoint: null,
+    userName: null,
+    userFlag: null,
+    loginFlag: false
   }
 })

@@ -1,11 +1,11 @@
 import { useRecoilValue } from "recoil";
 import { userState } from "./atom/Users";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import React from "react";
 import {TransitionProps} from "@mui/material/transitions"
 import {Avatar, Container, Divider, Typography,CircularProgress, Select, MenuItem,
-    Box, Card, Input,CardActions, InputLabel,CardContent, Slide,
-    Button, Dialog, DialogContent, DialogActions, DialogTitle, DialogContentText, TextField, SelectChangeEvent} from "@mui/material";
+    Box, Card, Input,CardActions, CardContent, Slide,
+    Button, Dialog, DialogContent, DialogActions, DialogTitle, SelectChangeEvent} from "@mui/material";
 
     
 type User = {
@@ -14,6 +14,7 @@ type User = {
     userPoint: number;
     userName: string;
     }
+
 const Transition = React.forwardRef(function Transition(
     props: TransitionProps & {
         children: React.ReactElement<any, any>;
@@ -40,9 +41,7 @@ function Home() {
       }, []);
 
     useEffect(() => {
-        setTimeout(() => {
-            setLoading(false)
-        }, 500)
+        setLoading(false)
     }, [userInfo])
 
     const handleClickOpen = () => {

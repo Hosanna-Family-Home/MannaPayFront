@@ -3,6 +3,10 @@ import { useRecoilValue, useSetRecoilState } from "recoil"
 import { useHistory } from "react-router-dom"
 import {Button, Container, Box, TextField, Typography} from "@mui/material";
 import { userState } from "./atom/Users";
+import axios from "axios";
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
 
 
 function Login() {
@@ -12,57 +16,75 @@ function Login() {
     userPw: "",
 	userPoint: 0,
 	userName: "",
-	userFlag: ""
+	userFlag: "",
+	parentChildFlag: 0,
+	loginFlag: false
   }
 
-const recoilUser = useRecoilValue(userState);
+type CsrfToken = {
+	csrf_token: string
+}
+
 const setRecoilUser = useSetRecoilState(userState);
 const [user, setUser] = useState<User>(initialUser);
-
-const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-const { name, value } = e.target;
-setUser({ ...user, [name]: value });
-	console.log('id:', user.userId)
-	console.log('password:', user.userPw)
+const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<number>) => {
+	const { name, value } = e.target;
+	setUser({ ...user, [name]: value });
 }
+  
+const handleSubmit = async (e: { preventDefault: () => void }) => {
+    e.preventDefault();
+	
+    try {
+        // ログインリクエストを送信
+		axios.defaults.withCredentials = true
+		const getCsrfToken = async () => {
+			const { data } = await axios.get<CsrfToken>(
+				'http://localhost:8080/csrf'
+			)
+			axios.defaults.headers.common['X-CSRF-Token'] = data.csrf_token
+			return data.csrf_token
+		  }
+		getCsrfToken()
+		.then((csrf_token) => {
+			alert(csrf_token)
+			axios.post('http://localhost:8080/login',
+			{email: user.userId, password: user.userPw}). //id: asdf@gmail.com, pw: asdfasdf
+			then((res) => {
+				alert('FINAL SUCCESS!!');
+				sessionStorage.setItem("userInfo", JSON.stringify(loginUser));
+				setRecoilUser(loginUser)
+				setUser(initialUser)
+				alert('login successed')
+				if (user.parentChildFlag == 0) {
+					history.push("/adminHome")
+				} else if (user.parentChildFlag == 1) {
+					history.push("/home")
+				} else {
+					sessionStorage.removeItem("userInfo")
+				}
 
-const handleSubmit = (e: { preventDefault: () => void }) => {
-	e.preventDefault();
-	validate(user);
-}
-
-const validate = (userInputValue: User) => {
-	let userFlag = ""
-	if (!userInputValue.userId || !userInputValue.userPw) {
-		alert('Please enter user id or password');
-		return;
-	}
-	if (userInputValue.userId === loginUser.userId
-		&& userInputValue.userPw === loginUser.userPw){
-			userFlag = loginUser.userFlag
-			sessionStorage.setItem("userInfo", JSON.stringify(loginUser));
-			setUser(initialUser)
-			alert('login successed')
-	} else {
-		setUser(initialUser)
-		alert('going wrong')
-	}
-	if (userFlag === "p") {
-		history.push("/adminHome")
-		console.log(sessionStorage.getItem("userInfo"))
-	}
-	if (userFlag === "c") {
-		history.push("/home")
-		console.log(sessionStorage.getItem("userInfo"))
-	}
+			})
+		})
+		.catch((err) => {
+			alert(`${err} : login failed`)
+		})
+		
+    } catch (error) {
+        // エラーハンドリング
+		sessionStorage.removeItem("userInfo")
+        alert('Error during login:');
+    }
 }
 
 type User = {
-	userId: string;
-	userPw: string;
-	userPoint: number;
-	userName: string;
-	userFlag: string;
+	userId: string | null;
+	userPw: string | null;
+	userPoint: number | null;
+	userName: string | null;
+	userFlag: string | null;
+	parentChildFlag: number;
+	loginFlag: boolean;
 }
 
 const loginUser: User = {
@@ -70,7 +92,9 @@ const loginUser: User = {
 	userPw: "1234",
 	userPoint: 235,
 	userName: "かなともや",
-	userFlag: "p"
+	userFlag: "p",
+	parentChildFlag: 0,
+	loginFlag: true
 }
 
   return (
@@ -114,6 +138,18 @@ const loginUser: User = {
 								value={user.userPw}
 								onChange={(e) => handleChange(e)}
 							/>
+							<InputLabel id="demo-simple-select-label">check</InputLabel>
+							<Select
+								name="parentChildFlag"
+								labelId="demo-simple-select-label"
+								id="demo-simple-select"
+								value={user.parentChildFlag}
+								label="Age"
+								onChange={(e) => handleChange(e)}
+							>
+								<MenuItem value={0}>Parent</MenuItem>
+								<MenuItem value={1}>Child</MenuItem>
+							</Select>
 							
 						<Button
 						type="submit"
